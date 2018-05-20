@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="." >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.quittle.rds2" >
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
+    <uses-sdk android:minSdkVersion="21"
+              android:targetSdkVersion="27" />
 
     <application
         android:allowBackup="true"
@@ -9,7 +13,7 @@
         android:theme="@style/AppTheme"
 		android:resizeableActivity="true">
         <activity
-            android:name=".MainActivity"
+            android:name="com.quittle.rds.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,10 +21,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <receiver android:name=".DownloadBroadcastReceiver">
+
+        <service android:name="com.quittle.rds.DownloadJobService"
+              android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <receiver android:name="com.quittle.rds.DownloadBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.DOWNLOAD_COMPLETE"/>
             </intent-filter>
         </receiver>
+
+        <provider
+            android:name="android.support.v4.content.FileProvider"
+            android:authorities="com.quittle.rds.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
     </application>
 </manifest>
