@@ -38,6 +38,4 @@ dependencies {
     api 'com.google.guava:guava:20.0'
 }
 
-tasks['preBuild'].dependsOn 'wrapper'
-
-defaultTasks 'wrapper', 'lint'
+defaultTasks 'lint'
