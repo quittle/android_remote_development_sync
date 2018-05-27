@@ -8,8 +8,6 @@ android_binary(
     resource_files = glob(["src/main/res/**/*"]),
     deps = [
         "@com_google_guava_guava//jar",
-        gmaven_artifact("com.android.support:support-compat:aar:27.1.1"),
-        gmaven_artifact("com.android.support:support-core-utils:aar:27.1.1"),
         gmaven_artifact("com.android.support:support-v4:aar:27.1.1"),
     ],
 )

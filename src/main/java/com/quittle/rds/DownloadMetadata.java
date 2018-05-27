@@ -19,7 +19,7 @@ public class DownloadMetadata {
     }
 
     public void setDownloadUrl(final String url) {
-        getSharedPreferences().edit().putString(PREF_CACHED_URL, url).commit();
+        getSharedPreferences().edit().putString(PREF_CACHED_URL, url).apply();
     }
 
     private SharedPreferences getSharedPreferences() {

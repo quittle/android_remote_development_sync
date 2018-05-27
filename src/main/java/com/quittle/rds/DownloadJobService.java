@@ -1,29 +1,18 @@
 package com.quittle.rds;
 
-import android.app.job.JobService;
-import android.app.job.JobParameters;
-
-import android.app.Activity;
 import android.app.DownloadManager;
-import android.app.job.JobScheduler;
-import android.app.job.JobInfo;
-import android.app.job.JobWorkItem;
-import android.content.ComponentName;
+import android.app.job.JobParameters;
+import android.app.job.JobService;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
-import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.widget.EditText;
+
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -44,7 +33,7 @@ public class DownloadJobService extends JobService {
     @Override
     public void onCreate() {
         downloadMetadata = new DownloadMetadata(this);
-        downloadManager = getSystemService(DownloadManager.class);
+        downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         DownloadBroadcastReceiver.setCallback(new Runnable() {
             @Override
@@ -52,6 +41,7 @@ public class DownloadJobService extends JobService {
                 final Uri uri = downloadManager.getUriForDownloadedFile(ongoingDownload.id);
                 if (uri == null) {
                     Log.i(TAG, "Unable to download file");
+                    return;
                 }
                 if (getApkPackageName(uri) != null) {
                     downloadMetadata.setDownloadUrl(ongoingDownload.url);
@@ -73,8 +63,6 @@ public class DownloadJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters parameters) {
-        final JobWorkItem workItem = parameters.dequeueWork();
-
         final String url = downloadMetadata.getDownloadUrl();
         if (url == null) {
             return false;
@@ -83,17 +71,20 @@ public class DownloadJobService extends JobService {
         if (ongoingDownload != null) {
             if (url.equals(ongoingDownload.url)) {
                 return false;
-            } else if (downloadManager.remove(new long[]{ ongoingDownload.id }) != 1) {
+            } else if (downloadManager.remove(ongoingDownload.id) != 1) {
                 Log.e(TAG, "Unable to cancel ongoing download");
             }
         }
 
+        ongoingDownload = new OngoingDownload();
+        ongoingDownload.url = url;
+        ongoingDownload.params = parameters;
         try {
-            ongoingDownload = new OngoingDownload();
-            ongoingDownload.url = url;
-            ongoingDownload.params = parameters;
             ongoingDownload.id = downloadManager.enqueue(new DownloadManager.Request(Uri.parse(url)).setDestinationInExternalFilesDir(getApplicationContext(), null, "download.apk"));
-        } catch (IllegalArgumentException e) {}
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Unable to enqueue download", e);
+            return false;
+        }
         return true;
     }
 
