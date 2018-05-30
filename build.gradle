@@ -23,7 +23,7 @@ android {
     buildToolsVersion '27.0.3'
 
     defaultConfig {
-        applicationId 'com.quittle.rds2'
+        applicationId 'com.quittle.rds3'
     }
 
     lintOptions {
@@ -38,4 +38,4 @@ dependencies {
     api 'com.google.guava:guava:20.0'
 }
 
-defaultTasks 'lint'
+defaultTasks 'lint', 'assemble'
