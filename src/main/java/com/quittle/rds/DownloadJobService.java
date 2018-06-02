@@ -1,19 +1,16 @@
 package com.quittle.rds;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.DownloadManager;
 import android.app.job.JobInfo;
-import android.app.job.JobInfo;
 import android.app.job.JobParameters;
-import android.app.job.JobScheduler;
 import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.app.job.JobWorkItem;
 import android.content.ComponentName;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -23,19 +20,26 @@ import android.os.PersistableBundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 public class DownloadJobService extends JobService {
     private static final String TAG = DownloadJobService.class.getSimpleName();
+    private static final HashFunction sha256HashFunction = Hashing.sha256();
     private static final int JOB_ID_DOWNLOAD_CHECK = 1;
 
     private DownloadMetadata downloadMetadata;
     private OngoingDownload ongoingDownload;
     private DownloadManager downloadManager;
+    private PackageManagementUtils packageManagementUtils;
+    private ActivityManager activityManager;
+
+    private String previousHash = null;
 
     private static class OngoingDownload {
         long id;
@@ -59,9 +63,9 @@ public class DownloadJobService extends JobService {
     @Override
     public void onCreate() {
         downloadMetadata = new DownloadMetadata(this);
+        packageManagementUtils = new PackageManagementUtils(this);
         downloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-
-        Log.i(TAG, "onCreate");
+        activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
 
         final Context self = this;
         DownloadBroadcastReceiver.setCallback(new Runnable() {
@@ -73,15 +77,39 @@ public class DownloadJobService extends JobService {
                     reschedule();
                     return;
                 }
-                if (getApkPackageName(uri) == null) {
+
+                final String packageName = packageManagementUtils.getApkPackageName(uri);
+                if (packageName == null) {
                     Log.i(TAG, "Downloaded file was an invalid APK");
+                    new File(uri.getPath()).delete();
                     reschedule();
                     return;
                 }
 
                 downloadMetadata.setDownloadUrl(ongoingDownload.url);
-                if (Objects.equals(hashFile(uri.getPath()), getInstalledPackageSignature(getApkPackageName(uri)))) {
+
+                final String downloadedHash = hashFile(uri.getPath());
+                if (downloadedHash == null) {
+                    Log.i(TAG, "Unable to hash downloaded file. Skipping");
+                    new File(uri.getPath()).delete();
+                    reschedule();
+                    return;
+                }
+
+                Log.i(TAG, "previousHash: " + previousHash + " downloadedHash: " + downloadedHash);
+
+                if (Objects.equals(downloadedHash, previousHash)) {
+                    Log.i(TAG, "APK downloaded previously. Skipping install prompt ");
+                    new File(uri.getPath()).delete();
+                    reschedule();
+                    return;
+                }
+
+                previousHash = downloadedHash;
+
+                if (Objects.equals(downloadedHash, hashFile(packageManagementUtils.getInstalledPackageApk(packageName)))) {
                     Log.i(TAG, "APK installed with matching signature already.");
+                    new File(uri.getPath()).delete();
                     reschedule();
                     return;
                 }
@@ -107,8 +135,6 @@ public class DownloadJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters parameters) {
-        Log.i(TAG, "onStartJob");
-
         final String url = downloadMetadata.getDownloadUrl();
         if (url == null) {
             reschedule();
@@ -128,7 +154,7 @@ public class DownloadJobService extends JobService {
         ongoingDownload.url = url;
         ongoingDownload.params = parameters;
         try {
-            ongoingDownload.id = downloadManager.enqueue(new DownloadManager.Request(Uri.parse(url)).setDestinationInExternalFilesDir(this, null, "download.apk"));
+            ongoingDownload.id = downloadManager.enqueue(new DownloadManager.Request(Uri.parse(url)).setDestinationInExternalFilesDir(this, null, "3-download.apk"));
             Log.i(TAG, "Enqued download of " +  url + " with id " + ongoingDownload.id);
         } catch (IllegalArgumentException e) {
             Log.w(TAG, "Unable to enqueue download", e);
@@ -151,30 +177,10 @@ public class DownloadJobService extends JobService {
             return null;
         }
         try {
-            return Files.hash(new File(path), Hashing.sha256()).toString();
+            return Files.hash(file, sha256HashFunction).toString();
         } catch (IOException e) {
             return null;
         }
-    }
-
-    private String getInstalledPackageSignature(final String packageName) {
-        final String path;
-        try {
-            path = getPackageManager().getApplicationInfo(packageName, 0).sourceDir;
-        } catch (PackageManager.NameNotFoundException e) {
-            return null;
-        }
-
-        return hashFile(path);
-    }
-
-    private String getApkPackageName(Uri uri) {
-        PackageInfo info = getPackageManager().getPackageArchiveInfo(uri.getPath(), 0);
-        Log.d(TAG, "uri: " + new File(uri.toString()).getAbsolutePath());
-        Log.d(TAG, "packageInfo: " + info);
-        if (info == null) return null;
-
-        return info.applicationInfo.packageName;
     }
 
     private Uri getDownloadUri(long downloadId) {
@@ -190,10 +196,12 @@ public class DownloadJobService extends JobService {
             }
 
             final String uri = cursor.getString(col);
+            if (uri == null) {
+                return null;
+            }
             return Uri.parse(uri);
         } finally {
             cursor.close();
         }
     }
-
 }

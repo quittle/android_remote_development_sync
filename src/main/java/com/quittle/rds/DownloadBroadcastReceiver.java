@@ -29,7 +29,9 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
                 r = runnable;
             }
 
-            r.run();
+            if (r != null) {
+                r.run();
+            }
         } else {
             Log.e(TAG, "Unexected action received");
         }

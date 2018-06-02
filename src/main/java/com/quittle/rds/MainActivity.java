@@ -14,9 +14,6 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.EditText;
 
-import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
@@ -33,7 +30,6 @@ public class MainActivity extends Activity {
 
         downloadMetadata = new DownloadMetadata(this);
         DownloadJobService.startRunning(this);
-        Log.i(TAG, "Scheduling download service");
 
         final EditText urlEditText = findViewById(R.id.url_edit_text);
         urlEditText.addTextChangedListener(new TextWatcher() {
