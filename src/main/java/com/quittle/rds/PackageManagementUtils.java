@@ -5,9 +5,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import java.io.File;
-import java.io.IOException;
-
 public class PackageManagementUtils {
     private final Context context;
 

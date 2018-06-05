@@ -9,12 +9,12 @@ import android.util.Log;
 public class DownloadBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = DownloadBroadcastReceiver.class.getSimpleName();
 
-    private static final Object lock = new Object();
+    private static final Object LOCK = new Object();
 
     private static Runnable runnable;
 
     public static void setCallback(final Runnable callback) {
-        synchronized (lock) {
+        synchronized (LOCK) {
             runnable = callback;
         }
     }
@@ -24,8 +24,9 @@ public class DownloadBroadcastReceiver extends BroadcastReceiver {
         String action = intent.getAction();
 
         if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+            @SuppressWarnings("PMD.AvoidFinalLocalVariable")
             final Runnable r;
-            synchronized (lock) {
+            synchronized (LOCK) {
                 r = runnable;
             }
 

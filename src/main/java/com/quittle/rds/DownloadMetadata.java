@@ -7,7 +7,7 @@ public class DownloadMetadata {
     private static final String PREF_CACHED_URL = "cached_url";
     private static final String PREF_GROUP_DOWNLOADS = "downloads";
 
-    final private Context context;
+    private final Context context;
 
     public DownloadMetadata(final Context context) {
         this.context = context.getApplicationContext();
