@@ -30,7 +30,7 @@ public class DownloadJobService extends JobService {
     private DownloadManager downloadManager;
     private PackageManagementUtils packageManagementUtils;
 
-    private String previousHash;
+    private static String previousHash;
 
     @Data
     private static class OngoingDownload {
