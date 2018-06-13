@@ -26,12 +26,6 @@
         <service android:name="com.quittle.rds.DownloadJobService"
               android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <receiver android:name="com.quittle.rds.DownloadBroadcastReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.DOWNLOAD_COMPLETE"/>
-            </intent-filter>
-        </receiver>
-
         <provider
             android:name="android.support.v4.content.FileProvider"
             android:authorities="${applicationId}.provider"
