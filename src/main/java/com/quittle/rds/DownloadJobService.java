@@ -19,7 +19,10 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("PMD.AccessorMethodGeneration")
 public class DownloadJobService extends JobService {
@@ -37,11 +40,14 @@ public class DownloadJobService extends JobService {
 
     private static String previousHash;
 
+    private static Set<Integer> cancelledJobIds = Collections.newSetFromMap(new ConcurrentHashMap<Integer, Boolean>());
+
     /**
      * @param context Android context used to schedule the download
      * @param url The url to download
      */
     public static void startRunning(final Context context, final String url) {
+        cancelledJobIds.remove(urlToJobId(url));
         startRunning(context, url, false);
     }
 
@@ -56,6 +62,11 @@ public class DownloadJobService extends JobService {
 
         if (!force && isJobPending(jobScheduler, jobId)) {
             Log.d(TAG, "Job already scheduled: " + url);
+            return;
+        }
+
+        if (cancelledJobIds.contains(jobId)) {
+            Log.d(TAG, "Job cancelled. Skipping scheduling");
             return;
         }
 
@@ -87,6 +98,8 @@ public class DownloadJobService extends JobService {
     }
 
     private static void stopRunning(final Context context, final int jobId) {
+        cancelledJobIds.add(jobId);
+
         final JobScheduler jobScheduler = (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         if (jobScheduler == null) {
             Log.e(TAG, "Unable to get job scheduler.");
