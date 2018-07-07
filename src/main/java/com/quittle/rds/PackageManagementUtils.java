@@ -5,6 +5,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
+import java.io.File;
+
 public class PackageManagementUtils {
     private final Context context;
 
@@ -12,9 +14,13 @@ public class PackageManagementUtils {
         this.context = context.getApplicationContext();
     }
 
-    public String getInstalledPackageApk(final String packageName) {
+    public File getInstalledPackageApk(final String packageName) {
         try {
-            return context.getPackageManager().getApplicationInfo(packageName, 0).sourceDir;
+            final String dir = context.getPackageManager().getApplicationInfo(packageName, 0).sourceDir;
+            if (dir == null) { // May be null if the package was previously installed
+                return null;
+            }
+            return new File(dir);
         } catch (PackageManager.NameNotFoundException e) {
             return null;
         }

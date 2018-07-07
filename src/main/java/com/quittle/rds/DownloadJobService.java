@@ -187,7 +187,7 @@ public class DownloadJobService extends JobService {
             return;
         }
 
-        final String downloadedHash = hashFile(uri.getPath());
+        final String downloadedHash = hashFile(new File(uri.getPath()));
         if (downloadedHash == null) {
             Log.i(TAG, "Unable to hash downloaded file. Skipping");
             delete(uri);
@@ -206,7 +206,8 @@ public class DownloadJobService extends JobService {
 
         previousHash = downloadedHash;
 
-        if (Objects.equals(downloadedHash, hashFile(packageManagementUtils.getInstalledPackageApk(packageName)))) {
+        final File installedApk = packageManagementUtils.getInstalledPackageApk(packageName);
+        if (installedApk != null && Objects.equals(downloadedHash, hashFile(installedApk))) {
             Log.i(TAG, "APK installed with matching signature already.");
             delete(uri);
             reschedule(jobParameters);
@@ -224,8 +225,7 @@ public class DownloadJobService extends JobService {
         reschedule(jobParameters);
     }
 
-    private String hashFile(final String path) {
-        final File file = new File(path);
+    private String hashFile(final File file) {
         if (!file.exists()) {
             return null;
         }
