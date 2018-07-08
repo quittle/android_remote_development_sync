@@ -7,7 +7,7 @@ import android.net.Uri;
 
 import java.io.File;
 
-public class PackageManagementUtils {
+public final class PackageManagementUtils {
     private final Context context;
 
     public PackageManagementUtils(final Context context) {

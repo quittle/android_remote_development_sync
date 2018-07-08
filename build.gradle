@@ -1,4 +1,6 @@
 buildscript {
+    project.ext.KOTLIN_VERSION = '1.2.51'
+
     repositories {
         mavenCentral()
         jcenter()
@@ -9,6 +11,7 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.1.2'
         classpath 'com.android.tools.lint:lint-gradle:26.1.2'
         classpath 'com.noveogroup.android:check:1.2.5'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KOTLIN_VERSION"
     }
 }
 
@@ -19,6 +22,7 @@ repositories {
 }
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.noveogroup.android.check'
 
 android {
@@ -34,6 +38,10 @@ android {
         abortOnError true
         disable 'GradleDependency', 'AllowBackup', 'GoogleAppIndexingWarning'
     }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 }
 
 check {
@@ -46,6 +54,7 @@ check {
 dependencies {
     api 'com.android.support:support-v4:27.1.1'
     api 'com.google.guava:guava:20.0'
+    api "org.jetbrains.kotlin:kotlin-stdlib:$KOTLIN_VERSION"
 }
 
 defaultTasks 'check', 'assemble'

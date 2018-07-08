@@ -238,7 +238,8 @@ public class DownloadJobService extends JobService {
 
     private Uri getDownloadedFileUriByDownloadId(long downloadId) {
         final Cursor cursor = downloadManager.query(
-                new DownloadManager.Query().setFilterById(downloadId)
+                new DownloadManager.Query()
+                        .setFilterById(downloadId)
                         .setFilterByStatus(DownloadManager.STATUS_SUCCESSFUL));
         try {
             if (!cursor.moveToFirst()) {
