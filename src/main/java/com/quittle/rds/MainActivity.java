@@ -6,17 +6,25 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.widget.EditText;
+import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.ScrollView;
+import android.widget.TextView;
 import android.widget.ToggleButton;
+
+import java.util.ArrayDeque;
+import java.util.Queue;
 
 @SuppressWarnings("PMD.AccessorMethodGeneration")
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
-
+    private static final int MAX_LOGCAT_OUTPUT_LENGTH = 10000;
     private static final boolean DOWNLOAD_ON_START_UP = true;
 
     private DownloadMetadata downloadMetadata;
+    private Logcat logcat;
+    private final Queue<String> logcatOutput = new ArrayDeque<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,12 +37,14 @@ public class MainActivity extends Activity {
             DownloadJobService.startRunning(this, downloadMetadata.getDownloadUrl());
         }
 
+        logcat = new Logcat();
+        logcat.addWatcher("com.quittle.rds", this::logcatLog);
+
         final EditText urlEditText = findViewById(R.id.url_edit_text);
         urlEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence sequence, int start, int count, int after) {
                 final String text = sequence.toString().trim();
-                Log.d(TAG, "Cancelling: " + text);
                 DownloadJobService.stopRunning(MainActivity.this, text);
             }
 
@@ -65,6 +75,34 @@ public class MainActivity extends Activity {
                     DownloadJobService.stopRunning(context, url);
                 }
             }
+        });
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        logcat.clearAndStop();
+        logcat = null;
+    }
+
+    private void logcatLog(String msg) {
+        logcatOutput.add(msg);
+        if (logcatOutput.size() > MAX_LOGCAT_OUTPUT_LENGTH) {
+            logcatOutput.remove();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (final String line : logcatOutput) {
+            sb.append(line);
+            sb.append(System.lineSeparator());
+        }
+        String logcat = sb.toString();
+        runOnUiThread(() -> {
+            final TextView tv = findViewById(R.id.logcat_output);
+            tv.setText(logcat);
+            final ScrollView sv = findViewById(R.id.logcat_container);
+            sv.fullScroll(View.FOCUS_DOWN);
         });
     }
 }
