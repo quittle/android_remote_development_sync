@@ -23,8 +23,8 @@ load("@android_sdk_downloader//:rules.bzl", "android_sdk_repository")
 android_sdk_repository(
     name = "androidsdk",
     workspace_name = "devsync",
-    api_level = 27,
-    build_tools_version = "27.0.3",
+    api_level = 28,
+    build_tools_version = "28.0.2",
 )
 
 maven_jar(
