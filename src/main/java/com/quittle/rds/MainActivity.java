@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -15,10 +14,10 @@ import android.widget.ToggleButton;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
+import java.util.List;
 
 @SuppressWarnings("PMD.AccessorMethodGeneration")
 public class MainActivity extends Activity {
-    private static final String TAG = MainActivity.class.getSimpleName();
     private static final int MAX_LOGCAT_OUTPUT_LENGTH = 10000;
     private static final boolean DOWNLOAD_ON_START_UP = true;
 
@@ -80,15 +79,15 @@ public class MainActivity extends Activity {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
-
         logcat.clearAndStop();
         logcat = null;
+
+        super.onDestroy();
     }
 
-    private void logcatLog(String msg) {
-        logcatOutput.add(msg);
-        if (logcatOutput.size() > MAX_LOGCAT_OUTPUT_LENGTH) {
+    private void logcatLog(List<String> messages) {
+        logcatOutput.addAll(messages);
+        while (logcatOutput.size() > MAX_LOGCAT_OUTPUT_LENGTH) {
             logcatOutput.remove();
         }
 
@@ -97,10 +96,10 @@ public class MainActivity extends Activity {
             sb.append(line);
             sb.append(System.lineSeparator());
         }
-        String logcat = sb.toString();
+        String logcatBody = sb.toString();
         runOnUiThread(() -> {
             final TextView tv = findViewById(R.id.logcat_output);
-            tv.setText(logcat);
+            tv.setText(logcatBody);
             final ScrollView sv = findViewById(R.id.logcat_container);
             sv.fullScroll(View.FOCUS_DOWN);
         });

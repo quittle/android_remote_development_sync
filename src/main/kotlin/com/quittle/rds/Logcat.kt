@@ -2,6 +2,7 @@ package com.quittle.rds
 
 import android.util.Log
 import java.io.BufferedReader
+import java.util.LinkedList
 
 private const val TAG = "Logcat"
 
@@ -24,10 +25,17 @@ class Logcat() {
                 val process : Process = Runtime.getRuntime().exec("logcat")
                 val reader : BufferedReader = process.getInputStream().bufferedReader()
 
+                val buffer = LinkedList<String>()
                 reader.lineSequence().forEach { line: String ->
-                    for (watcher in watcherToPackage.keys) {
-                        watcher.onMessage(line)
+                    buffer.add(line)
+                    if (reader.ready()) {
+                        return@forEach;
                     }
+
+                    for (watcher in watcherToPackage.keys) {
+                        watcher.onMessages(buffer)
+                    }
+                    buffer.clear()
                 }
                 reader.close()
             } catch (e: Throwable) {

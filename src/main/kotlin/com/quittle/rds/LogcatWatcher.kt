@@ -5,9 +5,9 @@ package com.quittle.rds
  */
 interface LogcatWatcher {
     /**
-     * Called when a new log message occurs.
-     * @param message The message logged to logcat.
+     * Called when new log messages occur
+     * @param messages A list of messages.
      */
-    fun onMessage(message: String)
+    fun onMessages(messages: List<String>)
 }
 
