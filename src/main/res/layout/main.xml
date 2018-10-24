@@ -1,4 +1,5 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -47,8 +48,10 @@
         <EditText
             android:id="@+id/url_edit_text"
             android:inputType="textUri"
+            android:autofillHints="url,uri"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            tools:ignore="UnusedAttribute" />
         <ToggleButton
             android:id="@+id/toggle_service_button"
             android:textOn="@string/toggle_service_text_on"

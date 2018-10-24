@@ -1,15 +1,15 @@
 buildscript {
-    project.ext.KOTLIN_VERSION = '1.2.70'
+    project.ext.KOTLIN_VERSION = '1.2.71'
 
     repositories {
+        google()
         mavenCentral()
         jcenter()
-        google()
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.4'
-        classpath 'com.android.tools.lint:lint-gradle:26.1.4'
+        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.lint:lint-gradle:26.2.1'
         classpath 'com.noveogroup.android:check:1.2.5'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$KOTLIN_VERSION"
     }
@@ -20,8 +20,8 @@ plugins {
 }
 
 repositories {
-    mavenCentral()
     google()
+    mavenCentral()
     jcenter()
 }
 
@@ -31,10 +31,12 @@ apply plugin: 'com.noveogroup.android.check'
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
         applicationId 'com.quittle.rds3'
+        minSdkVersion 21
+        targetSdkVersion 28
     }
 
     lintOptions {
